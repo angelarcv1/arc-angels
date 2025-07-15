@@ -2,18 +2,18 @@
 
 > Arc ecosystem AI agent
 
-**Last Updated:** 03/02/2026
+**Last Updated:** 05/02/2026
 
 ## Status
 
 🚧 **Under Development** 🚧
 
-## TODO
+## Progress
 
 - [x] Define core types
 - [x] Basic agent class
-- [ ] MCP integration
-- [ ] Service discovery
+- [x] MCP integration
+- [ ] Service discovery (Ryzome)
 - [ ] Approval workflow
 - [ ] Token integration
 
@@ -32,27 +32,51 @@ import { ArsAngel } from 'ars-angel';
 const agent = new ArsAngel({
   name: 'my-agent',
   version: '0.1.0',
-  debug: true,
+  mcpEndpoint: 'wss://mcp.arc.fun/v1',
 });
 
-await agent.start();
+await agent.initialize();
 ```
 
 ## Architecture
 
 ```
-┌─────────────────┐
-│    ArsAngel     │
-│  ┌───────────┐  │
-│  │   Tasks   │  │
-│  └───────────┘  │
-│  ┌───────────┐  │
-│  │   State   │  │
-│  └───────────┘  │
-└─────────────────┘
-        │
-        ▼
-   (MCP - TODO)
+┌─────────────────────────┐
+│       ArsAngel          │
+│  ┌───────────────────┐  │
+│  │      Tasks        │  │
+│  └─────────┬─────────┘  │
+│            │            │
+│  ┌─────────▼─────────┐  │
+│  │    MCP Client     │  │
+│  └─────────┬─────────┘  │
+└────────────┼────────────┘
+             │
+             ▼
+    Arc MCP Endpoint
+```
+
+## MCP Protocol
+
+Model Context Protocol (MCP) is the communication layer for Arc agents.
+Think of it as "HTTP for AI" - a standardized way for agents to talk to services.
+
+### Connecting to MCP
+
+```typescript
+import { MCPClient } from 'ars-angel';
+
+const mcp = new MCPClient('wss://mcp.arc.fun/v1');
+await mcp.connect();
+
+// Invoke a service
+const result = await mcp.invoke('service.action', { param: 'value' });
+```
+
+### MCP Status
+
+```typescript
+mcp.getStatus(); // 'disconnected' | 'connecting' | 'connected' | 'error'
 ```
 
 ## Development
@@ -70,11 +94,18 @@ Set `debug: true` in config to enable verbose logging.
 const agent = new ArsAngel({
   name: 'test',
   version: '0.1.0',
-  debug: true, // Enables debug output
+  mcpEndpoint: 'wss://mcp.arc.fun/v1',
+  debug: true,
 });
 
 agent.debug_dumpState(); // Print internal state
 ```
 
+### Debug Methods (dev only)
+
+- `debug_dumpState()` - Print full agent state
+- `debug_listTasks()` - List all tasks
+- `debug_mcpStats()` - Show MCP call statistics
+
 ---
-*03/02/2026*
+*05/02/2026*

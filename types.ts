@@ -1,36 +1,69 @@
 /**
  * ARS ANGEL - Types
- * Commit 2: Expanded type definitions
+ * Commit 3: Added MCP types
  */
 
 export interface AgentConfig {
   name: string;
   version: string;
   description?: string;
+  mcpEndpoint: string;
   debug?: boolean;
 }
 
-export type AgentState = 'idle' | 'thinking' | 'executing' | 'error';
+export type AgentState =
+  | 'initializing'
+  | 'idle'
+  | 'planning'
+  | 'executing'
+  | 'error';
 
 export interface Task {
   id: string;
-  type: string;
-  payload: unknown;
+  type: TaskType;
+  payload: TaskPayload;
   status: TaskStatus;
-  createdAt: Date;
+  createdAt: number;
+  updatedAt: number;
 }
 
-export type TaskStatus = 'pending' | 'running' | 'done' | 'failed';
+export type TaskType = 'query' | 'execute';
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed';
 
-// Logging config for debug mode
-export interface LogConfig {
-  level: 'debug' | 'info' | 'warn' | 'error';
-  prefix: string;
-  timestamps: boolean;
+export interface TaskPayload {
+  action: string;
+  data: Record<string, unknown>;
 }
 
-// Placeholder for MCP - will implement next
-export interface MCPEndpoint {
-  url: string;
-  // TODO: auth, protocols, etc
+// MCP Protocol Types
+export interface MCPRequest {
+  id: string;
+  method: string;
+  params: Record<string, unknown>;
+  timestamp: number;
+}
+
+export interface MCPResponse {
+  id: string;
+  result?: unknown;
+  error?: MCPError;
+  timestamp: number;
+}
+
+export interface MCPError {
+  code: number;
+  message: string;
+}
+
+export interface MCPConnection {
+  endpoint: string;
+  status: 'disconnected' | 'connecting' | 'connected' | 'error';
+  lastPing?: number;
+}
+
+// Debug types - will remove in prod
+export interface DebugStats {
+  mcpCalls: number;
+  tasksRun: number;
+  errors: number;
 }
