@@ -2,25 +2,24 @@
 
 > Arc ecosystem AI agent
 
-**Last Updated:** 05/02/2026
+**Last Updated:** 07/02/2026
 
 ## Status
 
-🚧 **Under Development** 🚧
+🟡 **Alpha** - Core features working
 
 ## Progress
 
 - [x] Define core types
 - [x] Basic agent class
 - [x] MCP integration
-- [ ] Service discovery (Ryzome)
-- [ ] Approval workflow
+- [x] Service discovery (Ryzome)
+- [ ] Human-in-the-loop approval
 - [ ] Token integration
 
 ## Installation
 
 ```bash
-# Coming soon
 npm install ars-angel
 ```
 
@@ -36,24 +35,40 @@ const agent = new ArsAngel({
 });
 
 await agent.initialize();
+
+// Submit a task
+const taskId = await agent.submitTask('query', {
+  action: 'memory.recall',
+  data: { query: 'user preferences' },
+  services: ['memory'],
+});
 ```
 
 ## Architecture
 
 ```
-┌─────────────────────────┐
-│       ArsAngel          │
-│  ┌───────────────────┐  │
-│  │      Tasks        │  │
-│  └─────────┬─────────┘  │
-│            │            │
-│  ┌─────────▼─────────┐  │
-│  │    MCP Client     │  │
-│  └─────────┬─────────┘  │
-└────────────┼────────────┘
-             │
-             ▼
-    Arc MCP Endpoint
+┌────────────────────────────────────┐
+│            ArsAngel                │
+│  ┌────────────────────────────┐    │
+│  │          Tasks             │    │
+│  └──────────────┬─────────────┘    │
+│                 │                  │
+│  ┌──────────────▼─────────────┐    │
+│  │      Service Registry      │    │
+│  │  (Ryzome Marketplace)      │    │
+│  └──────────────┬─────────────┘    │
+│                 │                  │
+│  ┌──────────────▼─────────────┐    │
+│  │        MCP Client          │    │
+│  └──────────────┬─────────────┘    │
+└─────────────────┼──────────────────┘
+                  │
+                  ▼
+         Arc MCP Services
+   ┌─────────┬─────────┬─────────┐
+   │  Soul   │ Listen  │  ...    │
+   │  Graph  │  DeFi   │         │
+   └─────────┴─────────┴─────────┘
 ```
 
 ## MCP Protocol
@@ -61,51 +76,54 @@ await agent.initialize();
 Model Context Protocol (MCP) is the communication layer for Arc agents.
 Think of it as "HTTP for AI" - a standardized way for agents to talk to services.
 
-### Connecting to MCP
-
 ```typescript
 import { MCPClient } from 'ars-angel';
 
 const mcp = new MCPClient('wss://mcp.arc.fun/v1');
 await mcp.connect();
-
-// Invoke a service
 const result = await mcp.invoke('service.action', { param: 'value' });
 ```
 
-### MCP Status
+## Service Discovery
+
+The agent automatically discovers services from the Ryzome marketplace.
 
 ```typescript
-mcp.getStatus(); // 'disconnected' | 'connecting' | 'connected' | 'error'
+// Find services with specific capabilities
+const services = await agent.discoverServices(['memory', 'context']);
+
+// Invoke a specific service
+const result = await agent.invokeService('soul-graph', 'recall', {
+  query: 'recent context',
+});
 ```
+
+### Available Services (Dev)
+
+| Service | Capabilities | Trust Score |
+|---------|--------------|-------------|
+| Soul Graph | memory, personality, context | 0.95 |
+| Listen DeFi | swap, stake, portfolio | 0.92 |
+
+> Note: Production will fetch services dynamically from Ryzome
 
 ## Development
 
 ```bash
-# Run in dev mode
 npx ts-node index.ts
 ```
 
 ### Debug Mode
 
-Set `debug: true` in config to enable verbose logging.
-
 ```typescript
 const agent = new ArsAngel({
-  name: 'test',
-  version: '0.1.0',
-  mcpEndpoint: 'wss://mcp.arc.fun/v1',
+  // ...config
   debug: true,
 });
 
-agent.debug_dumpState(); // Print internal state
+agent.debug_dumpState();
+agent.debug_listTasks();
 ```
 
-### Debug Methods (dev only)
-
-- `debug_dumpState()` - Print full agent state
-- `debug_listTasks()` - List all tasks
-- `debug_mcpStats()` - Show MCP call statistics
-
 ---
-*05/02/2026*
+*07/02/2026*

@@ -1,15 +1,13 @@
 /**
  * ARS ANGEL - MCP Client
- * Commit 3: Model Context Protocol implementation
- *
- * "HTTP for AI" - standardized agent communication
+ * Commit 4: Unchanged from commit 3
  */
 
 import { MCPConnection, MCPRequest, MCPResponse } from './types';
 
 export class MCPClient {
   private connection: MCPConnection;
-  private callCount = 0; // debug tracking
+  private callCount = 0;
 
   constructor(endpoint: string) {
     this.connection = {
@@ -21,10 +19,7 @@ export class MCPClient {
   async connect(): Promise<void> {
     this.connection.status = 'connecting';
     console.log(`[MCP] Connecting to ${this.connection.endpoint}...`);
-
-    // Simulated - real impl uses WebSocket
     await this.delay(100);
-
     this.connection.status = 'connected';
     this.connection.lastPing = Date.now();
     console.log('[MCP] Connected');
@@ -63,7 +58,6 @@ export class MCPClient {
     return this.connection.status;
   }
 
-  // Debug method
   debug_getCallCount(): number {
     return this.callCount;
   }

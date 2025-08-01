@@ -1,8 +1,9 @@
 /**
  * ARS ANGEL
- * Commit 3: Added MCP exports
+ * Commit 4: Added service registry
  */
 
 export { ArsAngel } from './agent';
 export { MCPClient } from './mcp-client';
+export { ServiceRegistry } from './service-registry';
 export * from './types';

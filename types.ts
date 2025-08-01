@@ -1,6 +1,6 @@
 /**
  * ARS ANGEL - Types
- * Commit 3: Added MCP types
+ * Commit 4: Added service types
  */
 
 export interface AgentConfig {
@@ -18,24 +18,28 @@ export type AgentState =
   | 'executing'
   | 'error';
 
+// Task types
 export interface Task {
   id: string;
   type: TaskType;
   payload: TaskPayload;
   status: TaskStatus;
+  result?: unknown;
+  error?: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export type TaskType = 'query' | 'execute';
-export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type TaskType = 'query' | 'execute' | 'compose';
+export type TaskStatus = 'pending' | 'planning' | 'running' | 'completed' | 'failed';
 
 export interface TaskPayload {
   action: string;
   data: Record<string, unknown>;
+  services?: string[];
 }
 
-// MCP Protocol Types
+// MCP types
 export interface MCPRequest {
   id: string;
   method: string;
@@ -61,7 +65,16 @@ export interface MCPConnection {
   lastPing?: number;
 }
 
-// Debug types - will remove in prod
+// Service types (Ryzome)
+export interface ServiceDefinition {
+  id: string;
+  name: string;
+  endpoint: string;
+  capabilities: string[];
+  trustScore: number;
+}
+
+// Debug - remove later
 export interface DebugStats {
   mcpCalls: number;
   tasksRun: number;
