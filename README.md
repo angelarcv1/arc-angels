@@ -2,20 +2,21 @@
 
 > Arc ecosystem AI agent
 
-**Last Updated:** 07/02/2026
-
 ## Status
 
-🟡 **Alpha** - Core features working
+🟡 **Beta** - Feature complete, testing in progress
+
+**Last Updated:** 10/02/2026
 
 ## Progress
 
-- [x] Define core types
-- [x] Basic agent class
+- [x] Core types
+- [x] Agent lifecycle
 - [x] MCP integration
-- [x] Service discovery (Ryzome)
-- [ ] Human-in-the-loop approval
-- [ ] Token integration
+- [x] Service discovery
+- [x] Human-in-the-loop approval
+- [ ] Token integration (coming soon)
+- [ ] Production hardening
 
 ## Installation
 
@@ -32,14 +33,23 @@ const agent = new ArsAngel({
   name: 'my-agent',
   version: '0.1.0',
   mcpEndpoint: 'wss://mcp.arc.fun/v1',
+  approvalMode: 'threshold',
 });
 
 await agent.initialize();
 
+// Listen for events
+agent.onEvent((event) => {
+  if (event.type === 'approval_required') {
+    console.log('Approval needed:', event.request);
+    // agent.approveTask(event.request.taskId);
+  }
+});
+
 // Submit a task
-const taskId = await agent.submitTask('query', {
+await agent.submitTask('execute', {
   action: 'memory.recall',
-  data: { query: 'user preferences' },
+  data: { query: 'user context' },
   services: ['memory'],
 });
 ```
@@ -47,38 +57,26 @@ const taskId = await agent.submitTask('query', {
 ## Architecture
 
 ```
-┌────────────────────────────────────┐
-│            ArsAngel                │
-│  ┌────────────────────────────┐    │
-│  │          Tasks             │    │
-│  └──────────────┬─────────────┘    │
-│                 │                  │
-│  ┌──────────────▼─────────────┐    │
-│  │      Service Registry      │    │
-│  │  (Ryzome Marketplace)      │    │
-│  └──────────────┬─────────────┘    │
-│                 │                  │
-│  ┌──────────────▼─────────────┐    │
-│  │        MCP Client          │    │
-│  └──────────────┬─────────────┘    │
-└─────────────────┼──────────────────┘
-                  │
-                  ▼
-         Arc MCP Services
-   ┌─────────┬─────────┬─────────┐
-   │  Soul   │ Listen  │  ...    │
-   │  Graph  │  DeFi   │         │
-   └─────────┴─────────┴─────────┘
+┌──────────────────────────────────────────┐
+│               ArsAngel                   │
+│  ┌──────────────┐    ┌───────────────┐   │
+│  │    Tasks     │    │   Approval    │   │
+│  └──────┬───────┘    │   Manager     │   │
+│         │            └───────┬───────┘   │
+│  ┌──────▼───────────────────▼────────┐   │
+│  │         Service Registry          │   │
+│  │        (Ryzome Marketplace)       │   │
+│  └──────────────┬────────────────────┘   │
+│                 │                        │
+│  ┌──────────────▼────────────────────┐   │
+│  │           MCP Client              │   │
+│  └───────────────────────────────────┘   │
+└──────────────────────────────────────────┘
 ```
 
 ## MCP Protocol
 
-Model Context Protocol (MCP) is the communication layer for Arc agents.
-Think of it as "HTTP for AI" - a standardized way for agents to talk to services.
-
 ```typescript
-import { MCPClient } from 'ars-angel';
-
 const mcp = new MCPClient('wss://mcp.arc.fun/v1');
 await mcp.connect();
 const result = await mcp.invoke('service.action', { param: 'value' });
@@ -86,44 +84,49 @@ const result = await mcp.invoke('service.action', { param: 'value' });
 
 ## Service Discovery
 
-The agent automatically discovers services from the Ryzome marketplace.
-
 ```typescript
-// Find services with specific capabilities
 const services = await agent.discoverServices(['memory', 'context']);
-
-// Invoke a specific service
 const result = await agent.invokeService('soul-graph', 'recall', {
   query: 'recent context',
 });
 ```
 
-### Available Services (Dev)
+## Approval Workflow
 
-| Service | Capabilities | Trust Score |
-|---------|--------------|-------------|
-| Soul Graph | memory, personality, context | 0.95 |
-| Listen DeFi | swap, stake, portfolio | 0.92 |
+For sensitive operations, the agent supports human-in-the-loop approval.
 
-> Note: Production will fetch services dynamically from Ryzome
+### Approval Modes
 
-## Development
-
-```bash
-npx ts-node index.ts
-```
-
-### Debug Mode
+| Mode | Description |
+|------|-------------|
+| `auto` | Approve all tasks automatically |
+| `manual` | Require approval for all `execute` tasks |
+| `threshold` | Auto-approve if within trust threshold |
 
 ```typescript
 const agent = new ArsAngel({
-  // ...config
-  debug: true,
+  // ...
+  approvalMode: 'threshold',
+  approvalThreshold: {
+    trustedServices: ['soul-graph'],
+  },
 });
 
-agent.debug_dumpState();
-agent.debug_listTasks();
+// Handle approval requests
+agent.onEvent((e) => {
+  if (e.type === 'approval_required') {
+    // Show to user, then:
+    agent.approveTask(e.request.taskId);
+    // or: agent.rejectTask(e.request.taskId);
+  }
+});
 ```
 
+## Roadmap
+
+- [ ] Token integration for service payments
+- [ ] On-chain settlement
+- [ ] Multi-agent coordination
+
 ---
-*07/02/2026*
+*10/02/2026*

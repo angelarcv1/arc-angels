@@ -1,41 +1,32 @@
 /**
  * ARS ANGEL - MCP Client
- * Commit 4: Unchanged from commit 3
+ * Commit 5: Added retry logic
  */
 
 import { MCPConnection, MCPRequest, MCPResponse } from './types';
 
 export class MCPClient {
   private connection: MCPConnection;
-  private callCount = 0;
+  private retryAttempts = 3;
 
   constructor(endpoint: string) {
-    this.connection = {
-      endpoint,
-      status: 'disconnected',
-    };
+    this.connection = { endpoint, status: 'disconnected' };
   }
 
   async connect(): Promise<void> {
     this.connection.status = 'connecting';
-    console.log(`[MCP] Connecting to ${this.connection.endpoint}...`);
     await this.delay(100);
     this.connection.status = 'connected';
-    this.connection.lastPing = Date.now();
-    console.log('[MCP] Connected');
   }
 
   async disconnect(): Promise<void> {
     this.connection.status = 'disconnected';
-    console.log('[MCP] Disconnected');
   }
 
-  async invoke(method: string, params: Record<string, unknown>): Promise<unknown> {
+  async invoke<T = unknown>(method: string, params: Record<string, unknown>): Promise<T> {
     if (this.connection.status !== 'connected') {
       throw new Error('MCP not connected');
     }
-
-    this.callCount++;
 
     const request: MCPRequest = {
       id: `mcp_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
@@ -44,31 +35,35 @@ export class MCPClient {
       timestamp: Date.now(),
     };
 
-    console.log(`[MCP] Invoke: ${method}`);
-    const response = await this.send(request);
-
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-
-    return response.result;
+    return this.sendWithRetry<T>(request);
   }
 
   getStatus(): MCPConnection['status'] {
     return this.connection.status;
   }
 
-  debug_getCallCount(): number {
-    return this.callCount;
+  private async sendWithRetry<T>(request: MCPRequest): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < this.retryAttempts; i++) {
+      try {
+        const response = await this.send(request);
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        return response.result as T;
+      } catch (e) {
+        lastError = e instanceof Error ? e : new Error(String(e));
+        await this.delay(Math.pow(2, i) * 100);
+      }
+    }
+
+    throw lastError ?? new Error('MCP request failed');
   }
 
   private async send(request: MCPRequest): Promise<MCPResponse> {
     await this.delay(50);
-    return {
-      id: request.id,
-      result: { ok: true },
-      timestamp: Date.now(),
-    };
+    return { id: request.id, result: { ok: true }, timestamp: Date.now() };
   }
 
   private delay(ms: number): Promise<void> {

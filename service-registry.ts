@@ -1,6 +1,7 @@
 /**
  * ARS ANGEL - Service Registry
- * Commit 4: Ryzome marketplace integration
+ * Commit 5: Ryzome integration
+ * 10/02/2026
  */
 
 import { ServiceDefinition } from './types';
@@ -10,7 +11,7 @@ export class ServiceRegistry {
   private services: Map<string, ServiceDefinition> = new Map();
   private mcpClient: MCPClient;
 
-  // TEMP: hardcoded for dev - will fetch from Ryzome
+  // TODO: fetch from Ryzome in prod
   private static DEV_SERVICES: ServiceDefinition[] = [
     {
       id: 'soul-graph',
@@ -33,12 +34,9 @@ export class ServiceRegistry {
   }
 
   async initialize(): Promise<void> {
-    console.log('[Registry] Loading services...');
-    // TODO: fetch from Ryzome API
     for (const service of ServiceRegistry.DEV_SERVICES) {
       this.services.set(service.id, service);
     }
-    console.log(`[Registry] Loaded ${this.services.size} services`);
   }
 
   async discover(capabilities: string[]): Promise<ServiceDefinition[]> {
@@ -57,10 +55,8 @@ export class ServiceRegistry {
     params: Record<string, unknown>
   ): Promise<unknown> {
     const service = this.services.get(serviceId);
-    if (!service) {
-      throw new Error(`Service not found: ${serviceId}`);
-    }
-    console.log(`[Registry] ${service.name}.${action}`);
+    if (!service) throw new Error(`Service not found: ${serviceId}`);
+
     return this.mcpClient.invoke(`${service.endpoint}/${action}`, params);
   }
 
@@ -70,13 +66,5 @@ export class ServiceRegistry {
 
   listServices(): ServiceDefinition[] {
     return Array.from(this.services.values());
-  }
-
-  // Debug
-  debug_printServices(): void {
-    console.log('[Registry] Services:');
-    for (const s of this.services.values()) {
-      console.log(`  - ${s.id}: ${s.capabilities.join(', ')}`);
-    }
   }
 }
