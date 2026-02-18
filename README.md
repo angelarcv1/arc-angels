@@ -177,7 +177,7 @@ console.log(`${balance} $ANGEL available`);
 
 ## Links
 
-- Token Contract: `xxxxxxxxxxxxxxxx`
+- Token Contract: `EkrVZACr7pQ3hPSBW2L7hRpWKYrgGyPd5bs1L5Twpump`
 - Website: [arc.fun](https://arc.fun)
 - Documentation: [docs.arc.fun](https://docs.arc.fun)
 
