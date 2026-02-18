@@ -17,7 +17,7 @@
 | Property | Value |
 |----------|-------|
 | Token | $ANGEL |
-| Contract | `3p1uWgYa2DKAqZ7efuM3nJmAL7nofzfRGGhggX7Apump` |
+| Contract | `EkrVZACr7pQ3hPSBW2L7hRpWKYrgGyPd5bs1L5Twpump` |
 | Network | Solana |
 | Launch Date | 15/02/2026 |
 
